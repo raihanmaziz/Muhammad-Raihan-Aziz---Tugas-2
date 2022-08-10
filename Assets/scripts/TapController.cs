@@ -5,14 +5,15 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class TapController : MonoBehaviour {
 
-	public delegate void PlayerDelegate ();
+	public delegate void PlayerDelegate();
 	public static event PlayerDelegate OnPlayerDied;
 	public static event PlayerDelegate OnPlayerScored;
 
 
-	public float tapForce=10;
-	public float tiltSmooth=5;
+	public float tapForce = 10;
+	public float tiltSmooth = 5;
 	public Vector3 startPos;
+	float clampBorderOffset = 1; // Offset from border in Units
 
 	public AudioSource tapAudio;
 	public AudioSource scoreAudio;
@@ -27,71 +28,95 @@ public class TapController : MonoBehaviour {
 	GameManager game;
 
 
-	void Start(){
-		rigidbody = GetComponent<Rigidbody2D> ();
-		downrotation = Quaternion.Euler (0, 0, -90);
-		forwardrotation = Quaternion.Euler (0, 0, 35);
+	void Start()
+	{
+		rigidbody = GetComponent<Rigidbody2D>();
+		downrotation = Quaternion.Euler(0, 0, -90);
+		forwardrotation = Quaternion.Euler(0, 0, 35);
 		game = GameManager.Instance;
 		rigidbody.simulated = false;
 	}
 
-	void OnEnable(){
+	void OnEnable()
+	{
 		GameManager.OnGameStarted += OnGameStarted;
 		GameManager.OnGameOverConfirmed += OnGameOverConfirmed;
 	}
 
-	void OnDisable(){
+	void OnDisable()
+	{
 		GameManager.OnGameStarted -= OnGameStarted;
 		GameManager.OnGameOverConfirmed -= OnGameOverConfirmed;
-	
+
 	}
 
-	void OnGameStarted(){
+	void OnGameStarted()
+	{
 		rigidbody.velocity = Vector3.zero;
 		rigidbody.simulated = true;
 
 	}
-	void OnGameOverConfirmed(){
+	void OnGameOverConfirmed()
+	{
 		transform.localPosition = startPos;
 		transform.rotation = Quaternion.identity;
 	}
-	void Update(){
-		if (game.GameOver) {
+	void Update()
+	{
+		if (game.GameOver)
+		{
 			rigidbody.simulated = false;
 			return;
 		}
-			
-		if(Input.GetMouseButtonDown(0))
-			{
-			tapAudio.Play ();
+
+		if (Input.GetMouseButtonDown(0))
+		{
+			tapAudio.Play();
 			transform.rotation = forwardrotation;
 			rigidbody.velocity = Vector3.zero;
-			rigidbody.AddForce (Vector2.up * tapForce, ForceMode2D.Force);
+			rigidbody.AddForce(Vector2.up * tapForce, ForceMode2D.Force);
 
-			}
+		}
+		ClampObjectIntoView(rigidbody);
+		transform.rotation = Quaternion.Lerp(transform.rotation, downrotation, tiltSmooth * Time.deltaTime);
 
-		transform.rotation = Quaternion.Lerp (transform.rotation, downrotation, tiltSmooth * Time.deltaTime);
-	
-	
+
 	}
 
-	void OnTriggerEnter2D(Collider2D col){
+	void OnTriggerEnter2D(Collider2D col)
+	{
 
-		if (col.gameObject.tag == "ScoreZone") {
-		
-			OnPlayerScored ();
+		if (col.gameObject.tag == "ScoreZone")
+		{
+
+			OnPlayerScored();
 			scoreAudio.Play();
 		}
 
-		if (col.gameObject.tag == "DeadZone") {
-		
+		if (col.gameObject.tag == "DeadZone")
+		{
+
 			rigidbody.simulated = false;
-			OnPlayerDied ();
+			OnPlayerDied();
 			dieAudio.Play();
 		}
-	
-	
-	
+
+
+
 	}
 
+	void ClampObjectIntoView(Rigidbody2D r)
+	{
+
+		// Set limits within the frustrum of the camera
+		Vector2 objectPosition = r.position;
+		float frustrumPositionTopY = Camera.main.ViewportToWorldPoint(new Vector2(0, 1)).y;
+		// Clamp top
+		if (objectPosition.y > frustrumPositionTopY - clampBorderOffset)
+		{
+			r.velocity = new Vector2(r.velocity.x, 0);
+			r.position = new Vector2(r.position.x, frustrumPositionTopY - clampBorderOffset);
+		}
+
+	}
 }
