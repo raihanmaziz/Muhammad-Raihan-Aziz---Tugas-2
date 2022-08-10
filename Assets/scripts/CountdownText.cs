@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class CountdownText : MonoBehaviour {
 
 	public delegate void CountdownFinished();
-	public static event CountdownFinished OnCountdownFinished;
+    public static event CountdownFinished OnCountdownFinished;
 
 
 	Text countdown;
@@ -28,7 +28,7 @@ public class CountdownText : MonoBehaviour {
 		
 		
 		}
-	
-		OnCountdownFinished ();
+
+        OnCountdownFinished ();
 	}
 }
