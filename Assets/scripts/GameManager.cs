@@ -15,6 +15,8 @@ public class GameManager : MonoBehaviour {
 	public GameObject countdownPage;
 	public Text scoreText;
 
+	private int _score;
+
 	enum PageState{
 		None,
 		Start,
