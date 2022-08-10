@@ -24,7 +24,7 @@ public class GameManager : MonoBehaviour {
 		Countdown
 	}
 
-	int score = 0;
+//	int score = 0;
 	bool gameOver = true;
 
 	public bool GameOver { get { return gameOver; } }
